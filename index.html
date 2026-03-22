@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ranker AI</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f0f0f;
+    color: white;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    width: 500px;
+}
+
+select, button, input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+}
+
+button {
+    background: #ff3c3c;
+    cursor: pointer;
+}
+
+.question-box {
+    margin-top: 15px;
+    background: #1a1a1a;
+    padding: 10px;
+    white-space: pre-wrap;
+}
+
+.result-box {
+    margin-top: 15px;
+    background: #222;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🔥 Ranker AI</h2>
+
+<select id="exam">
+    <option value="JEE">JEE</option>
+    <option value="NDA">NDA</option>
+    <option value="KCET">KCET</option>
+</select>
+
+<button onclick="startTest()">Start Test</button>
+
+<div id="questions" class="question-box"></div>
+
+<div id="answers" style="display:none;">
+    <input id="a1" placeholder="Answer Q1 (A/B/C/D)">
+    <input id="a2" placeholder="Answer Q2">
+    <input id="a3" placeholder="Answer Q3">
+    <input id="a4" placeholder="Answer Q4">
+    <input id="a5" placeholder="Answer Q5">
+
+    <button onclick="submitAnswers()">Submit Answers</button>
+</div>
+
+<div id="result" class="result-box"></div>
+
+</div>
+
+<script>
+
+let storedQuestions = "";
+
+async function startTest() {
+    const exam = document.getElementById("exam").value;
+    const qBox = document.getElementById("questions");
+    const result = document.getElementById("result");
+
+    result.innerText = "";
+    qBox.innerText = "Generating questions...";
+
+    const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ type: "generate", exam })
+    });
+
+    const data = await res.json();
+
+    storedQuestions = data.questions;
+
+    qBox.innerText = storedQuestions;
+    document.getElementById("answers").style.display = "block";
+}
+
+async function submitAnswers() {
+    const result = document.getElementById("result");
+
+    const answers = [
+        document.getElementById("a1").value,
+        document.getElementById("a2").value,
+        document.getElementById("a3").value,
+        document.getElementById("a4").value,
+        document.getElementById("a5").value
+    ];
+
+    result.innerText = "Evaluating...";
+
+    const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            type: "evaluate",
+            questions: storedQuestions,
+            answers: answers
+        })
+    });
+
+    const data = await res.json();
+
+    result.innerText = data.result;
+}
+
+</script>
+
+</body>
+</html>
